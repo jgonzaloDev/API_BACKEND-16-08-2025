@@ -3,7 +3,7 @@ name: Build and deploy Laravel app to Azure Web App - appserviceDojo14-04-2025
 on:
   push:
     branches:
-      - main  # Cambia a 'develop' si esa es tu rama principal
+      - develop
   workflow_dispatch:
 
 jobs:
@@ -77,5 +77,3 @@ jobs:
 
       - name: Run Laravel migrations
         run: php artisan migrate --force || echo "Migración ya aplicada o fallida"
-          slot-name: 'Production'
-          package: .
