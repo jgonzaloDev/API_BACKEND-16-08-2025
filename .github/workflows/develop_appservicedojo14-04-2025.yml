@@ -3,7 +3,7 @@ name: Build and deploy Laravel app to Azure Web App - appserviceDojo14-04-2025
 on:
   push:
     branches:
-      - develop
+      - develop  # Puedes cambiar a 'main' si es tu rama principal
   workflow_dispatch:
 
 jobs:
@@ -24,9 +24,6 @@ jobs:
 
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader
-
-      - name: Generate Laravel APP key
-        run: php artisan key:generate --ansi
 
       - name: Set directory permissions
         run: chmod -R 775 storage bootstrap/cache
