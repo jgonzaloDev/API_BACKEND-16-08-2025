@@ -1,9 +1,9 @@
-name: Build and deploy PHP Laravel app to Azure Web App - appserviceDojo14-04-2025
+name: Build and deploy Laravel app to Azure Web App - appserviceDojo14-04-2025
 
 on:
   push:
     branches:
-      - develop
+      - main  # Cambia a 'develop' si esa es tu rama principal
   workflow_dispatch:
 
 jobs:
@@ -13,41 +13,32 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, bcmath, curl, mysql
+          extensions: mbstring, pdo, openssl
 
       - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --optimize-autoloader
+        run: composer install --no-dev --optimize-autoloader
 
-      - name: Ensure storage and cache directories exist
+      - name: Generate Laravel APP key
+        run: php artisan key:generate --ansi
+
+      - name: Set directory permissions
+        run: chmod -R 775 storage bootstrap/cache
+
+      - name: Package Laravel app (excluding unnecessary files)
         run: |
-          mkdir -p storage/framework/{cache,sessions,views}
-          mkdir -p bootstrap/cache
-
-      - name: Copy .env.production to .env
-        run: cp .env.production .env
-
-      - name: Set Laravel App Key
-        run: php artisan key:generate || echo "Key already set"
-
-      - name: Cache Config, Routes, Views
-        run: |
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
-
-      - name: Zip artifact for deployment
-        run: zip -r release.zip . -x ".git" "tests/" "node_modules/" "storage/logs/" ".github/"
+          zip -r release.zip . -x "tests/*" "node_modules/*" ".git/*" ".github/*"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: php-app
+          name: laravel-app
           path: release.zip
 
   deploy:
@@ -61,15 +52,15 @@ jobs:
       contents: read
 
     steps:
-      - name: Download artifact from build
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: php-app
+          name: laravel-app
 
-      - name: Unzip artifact
+      - name: Unzip package
         run: unzip release.zip
 
-      - name: Azure Login
+      - name: Login to Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_53A524527954481D988C3A7518061EE5 }}
@@ -81,5 +72,10 @@ jobs:
         id: deploy-to-webapp
         with:
           app-name: 'appserviceDojo14-04-2025'
+          slot-name: 'Production'
+          package: .
+
+      - name: Run Laravel migrations
+        run: php artisan migrate --force || echo "Migración ya aplicada o fallida"
           slot-name: 'Production'
           package: .
