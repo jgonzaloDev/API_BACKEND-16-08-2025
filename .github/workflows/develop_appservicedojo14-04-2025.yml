@@ -3,7 +3,7 @@ name: Build and deploy Laravel app to Azure Web App - appserviceDojo14-04-2025
 on:
   push:
     branches:
-      - develop  # Puedes cambiar a 'main' si es tu rama principal
+      - develop
   workflow_dispatch:
 
 jobs:
@@ -71,6 +71,9 @@ jobs:
           app-name: 'appserviceDojo14-04-2025'
           slot-name: 'Production'
           package: .
+
+      - name: Verificar DB_HOST en entorno
+        run: php -r "echo '🔍 DB_HOST = ' . getenv('DB_HOST') . PHP_EOL;"
 
       - name: Run Laravel migrations
         run: php artisan migrate --force || echo "Migración ya aplicada o fallida"
