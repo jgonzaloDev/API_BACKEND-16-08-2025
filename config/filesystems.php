@@ -60,6 +60,10 @@ return [
             'report' => false,
         ],
 
+		'azure_blob' => [
+			'driver' => 'local',
+			'root' => storage_path('app/azure-temp'),
+],
     ],
 
     /*
