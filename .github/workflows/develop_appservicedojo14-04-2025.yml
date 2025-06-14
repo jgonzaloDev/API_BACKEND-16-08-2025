@@ -1,0 +1,79 @@
+name: Build and deploy Laravel app to Azure Web App - appserviceDojo14-04-2025
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo, openssl
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: Set directory permissions
+        run: chmod -R 775 storage bootstrap/cache
+
+      - name: Package Laravel app (excluding unnecessary files)
+        run: |
+          zip -r release.zip . -x "tests/*" "node_modules/*" ".git/*" ".github/*"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: laravel-app
+          path: release.zip
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: laravel-app
+
+      - name: Unzip package
+        run: unzip release.zip
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_53A524527954481D988C3A7518061EE5 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B4A9DB7B34704212A521FF6735026CEB }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_62BF135F4C8249ED92453D2C8EC894C6 }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
+        with:
+          app-name: 'appserviceDojo14-04-2025'
+          slot-name: 'Production'
+          package: .
+
+      - name: Verificar DB_HOST en entorno
+        run: php -r "echo '🔍 DB_HOST = ' . getenv('DB_HOST') . PHP_EOL;"
+
+      - name: Run Laravel migrations
+        run: php artisan migrate --force || echo "Migración ya aplicada o fallida"
