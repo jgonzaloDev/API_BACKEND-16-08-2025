@@ -66,6 +66,9 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_5D56074C2AF548CA942F0F666E0E0E18 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_AE9A0F88F2F54309ACDC02766A22CE68 }}
 
+      - name: Create dummy .env for Artisan
+        run: cp .env.example .env
+
       - name: Prepare Laravel (config/cache/key)
         run: |
           composer dump-autoload --optimize
@@ -81,3 +84,4 @@ jobs:
           app-name: 'laravel-backend-demo'
           slot-name: 'Production'
           package: .
+
