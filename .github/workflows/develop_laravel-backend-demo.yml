@@ -60,10 +60,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_XXXX }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_XXXX }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_XXXX }}
-          auth-type: IDENTITY
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_436B9FF7EAEC4FA7A3DD1A871364D449 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_5D56074C2AF548CA942F0F660E0E0E18 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_AE9A0F88F2F54309ACD02766A22CE68 }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -78,6 +77,3 @@ jobs:
 
       - name: Run Laravel migrations
         run: php artisan migrate --force || echo "Migración ya aplicada o fallida"
-
-
-
