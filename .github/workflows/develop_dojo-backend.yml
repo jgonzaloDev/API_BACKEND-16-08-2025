@@ -28,6 +28,12 @@ jobs:
       - name: Install Composer dependencies
         run: |
           composer install --no-dev --optimize-autoloader
+
+      - name: Copiar archivo .env
+        run: cp .env.example .env
+
+      - name: Generar APP_KEY y cachear configuración
+        run: |
           php artisan key:generate
           php artisan config:cache
           php artisan route:cache
@@ -85,5 +91,3 @@ jobs:
 
       - name: Run Laravel migrations
         run: php artisan migrate --force || echo '⚠️ Migración ya aplicada o fallida'
-
-          
