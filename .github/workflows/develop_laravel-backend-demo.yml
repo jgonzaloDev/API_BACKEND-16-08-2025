@@ -3,7 +3,7 @@ name: Build and deploy Laravel app to Azure Web App - laravel-backend-demo
 on:
   push:
     branches:
-      - develop
+      - main
   workflow_dispatch:
 
 jobs:
@@ -13,29 +13,43 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, pdo, openssl
+          extensions: mbstring, pdo, pdo_sqlsrv, openssl
 
-      - name: Install Composer dependencies
+      - name: Install composer dependencies
         run: composer install --no-dev --optimize-autoloader
 
-      - name: Set directory permissions
+      - name: Create .env file from secrets
+        run: |
+          echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env
+          echo "APP_ENV=${{ secrets.APP_ENV }}" >> .env
+          echo "APP_DEBUG=${{ secrets.APP_DEBUG }}" >> .env
+          echo "APP_URL=${{ secrets.APP_URL }}" >> .env
+          echo "DB_CONNECTION=${{ secrets.DB_CONNECTION }}" >> .env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
+          echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> .env
+          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+
+      - name: Generate Laravel APP key
+        run: php artisan key:generate --ansi
+
+      - name: Set storage permissions
         run: chmod -R 775 storage bootstrap/cache
 
-      - name: Package Laravel app (excluding unnecessary files)
-        run: |
-          zip -r release.zip . -x "tests/*" "node_modules/*" ".git/*" ".github/*"
+      - name: Zip artifact for deployment
+        run: zip release.zip . -r
 
-      - name: Upload artifact
+      - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: laravel-app
+          name: php-app
           path: release.zip
 
   deploy:
@@ -52,16 +66,17 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: laravel-app
+          name: php-app
 
-      - name: Unzip package
+      - name: Unzip artifact
         run: unzip release.zip
 
-      - name: Login to Azure using managed identity
+      - name: Login to Azure
         uses: azure/login@v2
         with:
-          auth-type: IDENTITY
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_AE9A0F88F2F54309ACD02766A22CE68 }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -71,9 +86,6 @@ jobs:
           slot-name: 'Production'
           package: .
 
-      - name: Verificar DB_HOST en entorno
-        run: php -r "echo '🔍 DB_HOST = ' . getenv('DB_HOST') . PHP_EOL;"
-
-      - name: Run Laravel migrations
-        run: php artisan migrate --force || echo "Migración ya aplicada o fallida"
+      - name: Run Laravel migrations safely
+        run: php artisan migrate --force || echo "Migración fallida, puede que ya esté aplicada"
 
