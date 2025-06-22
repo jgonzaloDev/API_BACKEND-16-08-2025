@@ -26,23 +26,12 @@ jobs:
           extensions: mbstring, pdo, openssl
 
       - name: Install Composer dependencies
-        run: |
-          composer install --no-dev --optimize-autoloader
-
-      - name: Copiar archivo .env
-        run: cp .env.example .env
-
-      - name: Generar APP_KEY y cachear configuración
-        run: |
-          php artisan key:generate
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
+        run: composer install --no-dev --optimize-autoloader
 
       - name: Set directory permissions
         run: chmod -R 775 storage bootstrap/cache
 
-      - name: Package Laravel app
+      - name: Package Laravel app (excluding unnecessary files)
         run: |
           zip -r release.zip . -x "tests/*" "node_modules/*" ".git/*" ".github/*"
 
@@ -89,5 +78,7 @@ jobs:
       - name: Verificar DB_HOST en entorno
         run: php -r "echo '🔍 DB_HOST = ' . getenv('DB_HOST') . PHP_EOL;"
 
+      - name: Run Laravel migrations
+        run: php artisan migrate --force || echo "Migración ya aplicada o fallida"
       - name: Run Laravel migrations
         run: php artisan migrate --force || echo '⚠️ Migración ya aplicada o fallida'
