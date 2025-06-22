@@ -12,9 +12,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -47,9 +44,6 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write
-      contents: read
 
     steps:
       - name: Download artifact
@@ -60,25 +54,17 @@ jobs:
       - name: Unzip package
         run: unzip release.zip
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D649DA976B1A4A65A4EFE3C8F02C7B96 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_9DF0B600AB384308A802ADD57C644BFB }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CCC2B2F5A4A2453B845E957FDD3832CA }}
-
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'dojo-backend'
           slot-name: 'Production'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .
 
       - name: Verificar DB_HOST en entorno
         run: php -r "echo '🔍 DB_HOST = ' . getenv('DB_HOST') . PHP_EOL;"
 
-      - name: Run Laravel migrations
-        run: php artisan migrate --force || echo "Migración ya aplicada o fallida"
       - name: Run Laravel migrations
         run: php artisan migrate --force || echo '⚠️ Migración ya aplicada o fallida'
