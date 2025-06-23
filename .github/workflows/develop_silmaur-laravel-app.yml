@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy PHP app to Azure Web App - silmaur-laravel-app
+name: Build and deploy Laravel app to Azure Web App - silmaur-laravel-app
 
 on:
   push:
@@ -12,9 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
-
     steps:
       - uses: actions/checkout@v4
 
@@ -22,24 +16,36 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+          extensions: mbstring, bcmath, curl, mysql, openssl, tokenizer, xml, ctype, fileinfo
 
-      - name: Check if composer.json exists
-        id: check_files
-        uses: andstor/file-existence-action@v1
-        with:
-          files: 'composer.json'
+      - name: Install Composer dependencies
+        run: |
+          composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
 
-      - name: Run composer install if composer.json exists
-        if: steps.check_files.outputs.files_exists == 'true'
-        run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
+      - name: Prepare Laravel folders
+        run: |
+          mkdir -p storage/framework/{sessions,views,cache}
+          mkdir -p bootstrap/cache
 
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+      - name: Copy .env file
+        run: cp .env.example .env
 
-      - name: Upload artifact for deployment job
+      - name: Generate Laravel APP_KEY
+        run: php artisan key:generate
+
+      - name: Optimize Laravel
+        run: |
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+      - name: Zip project
+        run: zip -r release.zip . -x ".git/*"
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: php-app
+          name: laravel-app
           path: release.zip
 
   deploy:
@@ -48,21 +54,21 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    
+
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: php-app
+          name: laravel-app
 
-      - name: Unzip artifact for deployment
+      - name: Unzip artifact
         run: unzip release.zip
-      
-      - name: 'Deploy to Azure Web App'
+
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'silmaur-laravel-app'
           slot-name: 'Production'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_SILMAURLARAVELAPP }}
           package: .
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F5E0DFEC00C04569B6C1613DC7F53CF8 }}
