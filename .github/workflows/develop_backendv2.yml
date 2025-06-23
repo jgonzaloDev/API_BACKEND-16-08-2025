@@ -1,4 +1,7 @@
-name: Build and deploy Laravel to Azure Web App - backendV2
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy PHP app to Azure Web App - backendV2
 
 on:
   push:
@@ -10,34 +13,33 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: read #This is required for actions/checkout
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
-          extensions: mbstring, bcmath, curl, xml, tokenizer, pdo, openssl
+          php-version: '8.4'
 
-      - name: Install Composer Dependencies
-        run: |
-          composer install --no-dev --optimize-autoloader
-          php artisan key:generate --ansi
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
-          chmod -R 775 storage bootstrap/cache
+      - name: Check if composer.json exists
+        id: check_files
+        uses: andstor/file-existence-action@v1
+        with:
+          files: 'composer.json'
+
+      - name: Run composer install if composer.json exists
+        if: steps.check_files.outputs.files_exists == 'true'
+        run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
 
       - name: Zip artifact for deployment
-        run: zip -r release.zip . -x ".git/" "node_modules/" "tests/" ".log"
+        run: zip release.zip ./* -r
 
-      - name: Upload artifact for deployment
+      - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: laravel-app
+          name: php-app
           path: release.zip
 
   deploy:
@@ -47,18 +49,18 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write
-      contents: read
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
 
     steps:
-      - name: Download artifact
+      - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: laravel-app
+          name: php-app
 
-      - name: Unzip artifact
+      - name: Unzip artifact for deployment
         run: unzip release.zip
-
+      
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -66,13 +68,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_8A2793F9769A491B8BB2D419A0DB02F1 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_565DF9AACCF64FDA83BAD04C8B331ECF }}
 
-      - name: Deploy to Azure Web App
+      - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'backendV2'
           slot-name: 'Production'
           package: .
-
-      - name: Run Laravel migrations
-        run: php artisan migrate --force || echo "Migración no aplicada (posiblemente ya ejecutada)"
