@@ -40,6 +40,10 @@ jobs:
         with:
           name: laravel-app
           path: release.zip
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
   deploy:
     runs-on: ubuntu-latest
