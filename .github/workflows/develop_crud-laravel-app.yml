@@ -60,9 +60,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_98D18670DA1D4A0EA803E7AF327B05D8 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_BD88B76C17DB4015A6D335BE0349451D }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_8F75AB47EBB044149940F4BCFAD39E35 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }}
 
       - name: Remove Azure default files
         run: |
