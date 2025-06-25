@@ -29,8 +29,8 @@ jobs:
       - name: Set permissions
         run: chmod -R 755 .
 
-      - name: Zip artifact for deployment
-        run: zip -r release.zip ./
+      - name: Zip only public contents for Azure
+        run: cd public && zip -r ../release.zip .
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
