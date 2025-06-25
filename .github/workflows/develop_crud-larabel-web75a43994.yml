@@ -29,12 +29,9 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
-      - name: Prepare deployment package
-        run: |
-          mkdir deploy
-          rsync -av --progress ./ ./deploy --exclude deploy --exclude .git --exclude node_modules
-          cd deploy
-          zip -r ../release.zip .
+      - name: Zip entire Laravel project for deployment
+        run: zip -r release.zip . -x '*.git*' 'node_modules/*' 'vendor/*'
+
 
       - name: Zip deployment package
         run: cd deploy && zip -r ../release.zip .
