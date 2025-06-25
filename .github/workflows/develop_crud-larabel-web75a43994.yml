@@ -29,13 +29,12 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
-      - name: Prepare deployment directory
+      - name: Prepare deployment package
         run: |
           mkdir deploy
-          cp -r * deploy/
-          cp -r .env deploy/
-          mv deploy/public/* deploy/
-          rm -rf deploy/public
+          rsync -av --progress ./ ./deploy --exclude deploy --exclude .git --exclude node_modules
+          cd deploy
+          zip -r ../release.zip .
 
       - name: Zip deployment package
         run: cd deploy && zip -r ../release.zip .
