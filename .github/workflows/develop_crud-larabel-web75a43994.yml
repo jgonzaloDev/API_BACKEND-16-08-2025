@@ -22,17 +22,25 @@ jobs:
           php-version: '8.2'
 
       - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Generate APP key
         run: |
-          composer install --no-progress --prefer-dist --optimize-autoloader
+          cp .env.example .env
+          php artisan key:generate
 
-      # Opcional: Ajustar permisos (si tu app lo necesita)
-      - name: Set permissions
-        run: chmod -R 755 .
+      - name: Prepare deployment directory
+        run: |
+          mkdir deploy
+          cp -r * deploy/
+          cp -r .env deploy/
+          mv deploy/public/* deploy/
+          rm -rf deploy/public
 
-      - name: Zip only public contents for Azure
-        run: cd public && zip -r ../release.zip .
+      - name: Zip deployment package
+        run: cd deploy && zip -r ../release.zip .
 
-      - name: Upload artifact for deployment
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: php-app
