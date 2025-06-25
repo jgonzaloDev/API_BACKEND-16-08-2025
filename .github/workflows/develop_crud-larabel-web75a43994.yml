@@ -32,10 +32,6 @@ jobs:
       - name: Zip entire Laravel project for deployment
         run: zip -r release.zip . -x '*.git*' 'node_modules/*' 'vendor/*'
 
-
-      - name: Zip deployment package
-        run: cd deploy && zip -r ../release.zip .
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
