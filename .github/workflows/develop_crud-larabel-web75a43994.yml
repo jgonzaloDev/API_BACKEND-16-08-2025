@@ -1,4 +1,4 @@
-name: Build and deploy Laravel app to Azure Web App - crud-larabel-web75a43994
+name: Build and deploy Laravel app to Azure Web App - crud-larabel
 
 on:
   push:
@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
@@ -18,28 +20,22 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, bcmath, curl, mysql
-          coverage: none
 
       - name: Install Composer dependencies
-        run: composer install --no-dev --optimize-autoloader
-
-      - name: Generate application key
-        run: php artisan key:generate
-
-      - name: Set directory permissions
         run: |
-          chmod -R 775 storage
-          chmod -R 775 bootstrap/cache
+          composer install --no-progress --prefer-dist --optimize-autoloader
+
+      # Opcional: Ajustar permisos (si tu app lo necesita)
+      - name: Set permissions
+        run: chmod -R 755 .
 
       - name: Zip artifact for deployment
-        run: |
-          zip -r release.zip . -x "*.git*" -x "*.github*" -x "tests/*"
+        run: zip -r release.zip ./
 
-      - name: Upload artifact
+      - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
-          name: laravel-app
+          name: php-app
           path: release.zip
 
   deploy:
@@ -50,7 +46,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: laravel-app
+          name: php-app
 
       - name: Unzip artifact
         run: unzip release.zip
