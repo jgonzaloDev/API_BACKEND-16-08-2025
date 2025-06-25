@@ -1,16 +1,22 @@
 #!/bin/bash
 
-echo "→ Laravel startup script iniciado"
-
-# Moverse al directorio de trabajo
 cd /home/site/wwwroot
 
-# Mover el contenido de public/ a la raíz temporalmente
-cp -r public/* .
+# Mover contenido público al raíz
+if [ -d "public" ]; then
+  cp -r public/* .
+fi
 
-echo "✔ Archivos públicos copiados a raíz"
+# Establecer permisos (por si acaso)
+chmod -R 755 .
 
-# Opcional: limpiar rutas de entrada innecesarias
-rm -rf public
+# Limpiar cachés
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
 
-echo "✅ Startup Laravel finalizado"
+# Generar clave si no existe
+if [ ! -f .env ]; then
+  cp .env.example .env
+  php artisan key:generate
+fi
