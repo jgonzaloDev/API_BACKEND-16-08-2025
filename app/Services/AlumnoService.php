@@ -98,4 +98,29 @@ class AlumnoService
             throw $e;
         }
     }
+
+
+     public function update(AlumnoDTO $alumnoDTO,$id){
+        $alumno=Alumno::find($id);
+        $alumno->matricula=$alumnoDTO->matricula;
+        $alumno->nombre=$alumnoDTO->nombre;
+        $alumno->fecha_nacimiento=$alumnoDTO->fecha_nacimiento;
+        $alumno->telefono=$alumnoDTO->telefono;
+        $alumno->email=$alumnoDTO->email;
+        $alumno->nivel_id=$alumnoDTO->nivel_id;
+        $alumno->save();
+        $alumnoDTO->id=$id;
+        return $alumnoDTO;
+    }
+
+    public function elimina($id){
+        $alumno=Alumno::find($id);
+        // $alumno->delete();
+        if($alumno){
+            $alumno->delete();
+            return response()->json(['message'=>'Alumno eliminado con exito!'],200);
+        }else{
+            return response()->json(['message'=>'Alumno no encontrado!'],404);
+        }
+    }
 }
