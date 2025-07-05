@@ -2,7 +2,7 @@
 
 namespace App\Infrastructure\Storage\Interfaces;
 
-Interface BlobServiceInterface
+Interface StorageInterface
 {
     public function listarBlobs();
 

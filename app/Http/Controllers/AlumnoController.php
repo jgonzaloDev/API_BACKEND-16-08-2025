@@ -65,39 +65,39 @@ class AlumnoController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
-    {
-        Log::info("Petición recibida: actualizar alumno ID $id", $request->all());
-        try {
-            $dto = new AlumnoDTO(
-                0,
-                $request->input('matricula'),
-                $request->input('nombre'),
-                Carbon::parse($request->input('fecha_nacimiento')),
-                $request->input('telefono'),
-                $request->input('email'),
-                $request->input('nivel_id')
-            );
+    // public function update(Request $request, $id)
+    // {
+    //     Log::info("Petición recibida: actualizar alumno ID $id", $request->all());
+    //     try {
+    //         $dto = new AlumnoDTO(
+    //             0,
+    //             $request->input('matricula'),
+    //             $request->input('nombre'),
+    //             Carbon::parse($request->input('fecha_nacimiento')),
+    //             $request->input('telefono'),
+    //             $request->input('email'),
+    //             $request->input('nivel_id')
+    //         );
 
-            $updated = $this->alumnoService->update($dto, $id);
-            Log::info("Alumno actualizado exitosamente: ID $id");
-            return response()->json($updated);
-        } catch (Exception $e) {
-            Log::error("Error en update($id): " . $e->getMessage());
-            return response()->json(['error' => 'Error al actualizar alumno'], 500);
-        }
-    }
+    //         $updated = $this->alumnoService->update($dto, $id);
+    //         Log::info("Alumno actualizado exitosamente: ID $id");
+    //         return response()->json($updated);
+    //     } catch (Exception $e) {
+    //         Log::error("Error en update($id): " . $e->getMessage());
+    //         return response()->json(['error' => 'Error al actualizar alumno'], 500);
+    //     }
+    // }
 
-    public function delete($id)
-    {
-        Log::info("Petición recibida: eliminar alumno ID $id");
-        try {
-            $deleted = $this->alumnoService->elimina($id);
-            Log::info("Alumno eliminado exitosamente: ID $id");
-            return response()->json(['message' => 'Alumno eliminado']);
-        } catch (Exception $e) {
-            Log::error("Error en delete($id): " . $e->getMessage());
-            return response()->json(['error' => 'Error al eliminar alumno'], 500);
-        }
-    }
+    // public function delete($id)
+    // {
+    //     Log::info("Petición recibida: eliminar alumno ID $id");
+    //     try {
+    //         $deleted = $this->alumnoService->elimina($id);
+    //         Log::info("Alumno eliminado exitosamente: ID $id");
+    //         return response()->json(['message' => 'Alumno eliminado']);
+    //     } catch (Exception $e) {
+    //         Log::error("Error en delete($id): " . $e->getMessage());
+    //         return response()->json(['error' => 'Error al eliminar alumno'], 500);
+    //     }
+    // }
 }
