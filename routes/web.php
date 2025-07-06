@@ -4,6 +4,8 @@ use App\Http\Controllers\AlumnoController;
 use App\Http\Controllers\AzureBlobController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/blobs', [AzureBlobController::class, 'listarBlobs']);
+Route::get('/blob/{name}', [AzureBlobController::class, 'obtenerBlob']);
 
 Route::get('/', [AlumnoController::class, 'index']);
 
